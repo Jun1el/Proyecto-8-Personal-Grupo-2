@@ -1,0 +1,136 @@
+From b68afb549522c0532e40049d5c48596937f48f11 Mon Sep 17 00:00:00 2001
+From: Jun1el <latorrevasquezandressebastian@gmail.com>
+Date: Sat, 7 Jun 2025 17:25:52 -0500
+Subject: [PATCH] feat[#3]: Generar script generar_kanban.sh
+
+---
+ scripts/generar_kanban.sh | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+ create mode 100755 scripts/generar_kanban.sh
+
+diff --git a/scripts/generar_kanban.sh b/scripts/generar_kanban.sh
+new file mode 100755
+index 0000000..8b07156
+--- /dev/null
++++ b/scripts/generar_kanban.sh
+@@ -0,0 +1,31 @@
++#!/bin/bash
++
++# Generar kanban.md desde issues.json
++OUTPUT_ARCHIVO="docs/kanban.md"
++ISSUES_ARCHIVO="issues.json"
++
++# Revisar si jq esta instalado
++if ! command -v jq >/dev/null 2>&1; then
++    echo "Error: jq es necesario para analizar JSON"
++    exit 1
++fi
++
++# Inicializar kanban.md
++cat > "$OUTPUT_ARCHIVO" << 'EOF'
++# Tablero Kanban 
++
++## To Do
++EOF
++
++# Agregar issues abiertos a To Do
++jq -r '.[] | select(.state == "open") | "- Issue #\(.id): \(.title) (Owner: \(.owner))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
++
++# Agregar sección In Progress
++echo -e "\n## In Progress" >> "$OUTPUT_ARCHIVO"
++jq -r '.[] | select(.state == "in_progress") | "- Issue #\(.id): \(.title) (Owner: \(.owner))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
++
++# Agregar sección Done
++echo -e "\n## Done" >> "$OUTPUT_ARCHIVO"
++jq -r '.[] | select(.state == "closed") | "- Issue #\(.id): \(.title) (Owner: \(.owner))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
++
++echo "Generado $OUTPUT_ARCHIVO"
+\ No newline at end of file
+-- 
+2.34.1
+
+From 351d037478de2551d5d6b11b622fd8ffcbb5de68 Mon Sep 17 00:00:00 2001
+From: Jun1el <latorrevasquezandressebastian@gmail.com>
+Date: Sat, 7 Jun 2025 17:26:34 -0500
+Subject: [PATCH] docs[#3]: Generar tablero kanban.md
+
+---
+ docs/kanban.md | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+ create mode 100644 docs/kanban.md
+
+diff --git a/docs/kanban.md b/docs/kanban.md
+new file mode 100644
+index 0000000..df165ba
+--- /dev/null
++++ b/docs/kanban.md
+@@ -0,0 +1,8 @@
++# Tablero Kanban 
++
++## To Do
++- Issue #1: Inicializar repositorio y estructura (Owner: junal)
++
++## In Progress
++
++## Done
+-- 
+2.34.1
+
+From 94f9001fc2ea969d94525d8cb7ca9a7961bf3189 Mon Sep 17 00:00:00 2001
+From: Jun1el <latorrevasquezandressebastian@gmail.com>
+Date: Sun, 8 Jun 2025 17:21:48 -0500
+Subject: [PATCH] test[#3]: Agregar test basico para el script
+ generar_kanban.sh
+
+---
+ tests/test_generar_kanban.sh | 37 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+ create mode 100755 tests/test_generar_kanban.sh
+
+diff --git a/tests/test_generar_kanban.sh b/tests/test_generar_kanban.sh
+new file mode 100755
+index 0000000..ec3f1f9
+--- /dev/null
++++ b/tests/test_generar_kanban.sh
+@@ -0,0 +1,37 @@
++#!/bin/bash
++# salir al primer error
++set -e
++KANBAN_SCRIPT="./scripts/generar_kanban.sh"
++KANBAN_ARCHIVO="./docs/kanban.md"
++ISSUES_ARCHIVO="./issues.json"
++
++# ejecutar script
++bash "$KANBAN_SCRIPT"
++
++# verificar que se genero el archivo kanban.md
++if [[ -f "$KANBAN_ARCHIVO" ]]; then
++    echo "kanban.md generado"
++else
++    echo "error: no se genero docs/kanban.md"
++    exit 1
++fi
++
++# verificar existencia de 3 secciones basicas
++for seccion in "## To Do" "## In Progress" "## Done"; do
++    if grep -q "$seccion" "$KANBAN_ARCHIVO"; then
++        echo "se encontro seccion: $seccion"
++    else
++        echo "error: falta seccion: $seccion"
++        exit 1
++    fi
++done
++
++# verificar que el archivo issues.json no esta vacio
++if [[ $(jq length "$ISSUES_ARCHIVO") -gt 0 ]]; then
++    echo "issues.json contiene al menos un issue"
++else
++    echo "error: issues.json esta vacio"
++    exit 1
++fi
++
++echo "el test paso correctamente"
+\ No newline at end of file
+-- 
+2.34.1
+
