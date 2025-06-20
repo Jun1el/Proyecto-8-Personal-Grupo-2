@@ -1,0 +1,63 @@
+From e119f28cbd70ab1b2acf68c9d2771ecc4d9a2d03 Mon Sep 17 00:00:00 2001
+From: Jun1el <latorrevasquezandressebastian@gmail.com>
+Date: Thu, 12 Jun 2025 13:21:53 -0500
+Subject: [PATCH] update[#17]: Mejorar generar_kanban.sh para transiciones de
+ estado
+
+---
+ docs/kanban.md            | 6 +++++-
+ scripts/generar_kanban.sh | 8 ++++----
+ 2 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/docs/kanban.md b/docs/kanban.md
+index df165ba..ef383ef 100644
+--- a/docs/kanban.md
++++ b/docs/kanban.md
+@@ -1,8 +1,12 @@
+ # Tablero Kanban 
+ 
+ ## To Do
+-- Issue #1: Inicializar repositorio y estructura (Owner: junal)
++- Issue #5: Crear datos inicialesde issues.json (Owner: janio, Creado: 2025-06-07T12:31:00)
+ 
+ ## In Progress
+ 
+ ## Done
++- Issue #1: Inicializar repositorio y estructura (Owner: junal, Cerrado: 2025-06-07T13:36:00)
++- Issue #2: Implementar hook commit-msg (Owner: janio, Cerrado: 2025-06-07T14:38:00)
++- Issue #3: Crear script generate_kanban.sh inicial (Owner: andres, Cerrado: 2025-06-08T18:04:00)
++- Issue #4: Desarrollar esqueleto de calc_metrics.py (Owner: junal, Cerrado: 2025-06-08T17:36:00)
+diff --git a/scripts/generar_kanban.sh b/scripts/generar_kanban.sh
+index 8b07156..21a572e 100755
+--- a/scripts/generar_kanban.sh
++++ b/scripts/generar_kanban.sh
+@@ -1,6 +1,6 @@
+ #!/bin/bash
+ 
+-# Generar kanban.md desde issues.json
++# Generar kanban.md desde issues.json con transiciones de estado
+ OUTPUT_ARCHIVO="docs/kanban.md"
+ ISSUES_ARCHIVO="issues.json"
+ 
+@@ -18,14 +18,14 @@ cat > "$OUTPUT_ARCHIVO" << 'EOF'
+ EOF
+ 
+ # Agregar issues abiertos a To Do
+-jq -r '.[] | select(.state == "open") | "- Issue #\(.id): \(.title) (Owner: \(.owner))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
++jq -r '.[] | select(.state == "open") | "- Issue #\(.id): \(.title) (Owner: \(.owner), Creado: \(.created_at))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
+ 
+ # Agregar sección In Progress
+ echo -e "\n## In Progress" >> "$OUTPUT_ARCHIVO"
+-jq -r '.[] | select(.state == "in_progress") | "- Issue #\(.id): \(.title) (Owner: \(.owner))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
++jq -r '.[] | select(.state == "in_progress") | "- Issue #\(.id): \(.title) (Owner: \(.owner), Creado: \(.created_at))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
+ 
+ # Agregar sección Done
+ echo -e "\n## Done" >> "$OUTPUT_ARCHIVO"
+-jq -r '.[] | select(.state == "closed") | "- Issue #\(.id): \(.title) (Owner: \(.owner))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
++jq -r '.[] | select(.state == "closed") | "- Issue #\(.id): \(.title) (Owner: \(.owner), Cerrado: \(.closed_at))"' "$ISSUES_ARCHIVO" >> "$OUTPUT_ARCHIVO"
+ 
+ echo "Generado $OUTPUT_ARCHIVO"
+\ No newline at end of file
+-- 
+2.34.1
+
